@@ -23,7 +23,7 @@ commands = [
     "/start", 
     "/give_data", 
     "/cal_intake", 
-    "/BMI",
+    "/bmi",
     "/water_consumption",
     "/track_cals",
     "/add_food",
@@ -258,8 +258,8 @@ def cal_intake(message):
         )
 
 # Calculating user's BMI (task N.4).
-@bot.message_handler(commands=["BMI"])
-def BMI(message):        
+@bot.message_handler(commands=["bmi"])
+def bmi(message):        
     if user_data["Weight"] is None or user_data["Height"] is None:
         bot.send_message(
             message.chat.id, 
