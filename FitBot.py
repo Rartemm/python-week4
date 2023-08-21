@@ -12,6 +12,9 @@ bot = telebot.TeleBot("6582384996:AAGHGu8ix9kJKIfz9icC2QT34FHWUKik0UQ")
 file_path_food = "C:\\Users\\Artem\\Downloads\\food_data.json"
 file_path_work = "C:\\Users\\Artem\\Downloads\\workouts_data.json"
 
+# Checking whether the user interacts with the bot for the first time
+interacted_users = set()
+
 # Tracked calories.
 total_calories = 0
 
@@ -66,11 +69,37 @@ def help(message):
 
 # Greetings (task N.1).
 @bot.message_handler(commands=["start"])
-def start(message):    
-    bot.send_message(
-        message.chat.id, 
-        "👋 Hello! I am your FitBot. \nI am here to assist you with your fitness journey"
+def start(message):
+    user_id = message.from_user.id
+    
+    if user_id not in interacted_users:
+        # Add the user ID to the set of interacted users
+        interacted_users.add(user_id)
+        
+        # Create a keyboard with a button to greet the user
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        greeting_button = types.KeyboardButton("👋 Greet me!")
+        markup.add(greeting_button)
+        
+        bot.send_message(
+            message.chat.id,
+            "👋 Hello! I am your FitBot. I am here to assist you with your fitness journey.",
+            reply_markup=markup
         )
+    else:
+        # If the user has already interacted, send a standard /start message
+        bot.send_message(
+            message.chat.id,
+            "👋 Hello! I am your FitBot. I am here to assist you with your fitness journey."
+        )
+
+# Handle the greeting button
+@bot.message_handler(func=lambda message: message.text == "👋 Greet me!")
+def greet_user(message):
+    bot.send_message(
+        message.chat.id,
+        "🎉 Welcome! I'm glad you're here. Let's start your fitness journey!"
+    )
 
 # Creating a command that will guide the user to enter their data (task N.2).
 @bot.message_handler(commands=["give_data"])
@@ -157,7 +186,7 @@ def process_height(message):
     except ValueError:
         bot.send_message(
             message.chat.id, 
-            "Invalid input! Please enter a valid number for height."
+            "Invalid input! Please enter a valid integer for height."
             )
         bot.register_next_step_handler(message, process_height)
 
@@ -175,7 +204,7 @@ def process_weight(message):
     except ValueError:
         bot.send_message(
             message.chat.id, 
-            "Invalid input! Please enter a valid number for weight."
+            "Invalid input! Please enter a valid integer for weight."
             )
         bot.register_next_step_handler(message, process_weight)
 
@@ -208,21 +237,21 @@ def cal_intake(message):
             f"You're missing data for: {missing_fields}. Please complete your data first by entering a command /give_data."
             )
         return
-    
+        
     intake = 0
 
-    if user_data["Gender"] == "Male":
+    if user_data["Gender"] == "male":
         intake = (10 * user_data["Weight"] 
                   + 6.25 * user_data["Height"] 
                   - 5 * user_data["Age"]
                   + 5) * activity_level[user_data["Activity Level"]]
     
-    if user_data["Gender"] == "Female":
+    if user_data["Gender"] == "female":
         intake = (10 * user_data["Weight"]
                   + 6.25 * user_data["Height"]
                   - 5 * user_data["Age"]
                   + 161) * activity_level[user_data["Activity Level"]]
-    
+        
     bot.send_message(
         message.chat.id, 
         f"Your daily calorie intake is approximately {intake} calories"
@@ -450,4 +479,5 @@ def info(message):
             "Sorry, I do not understand you. Type /help to see available commands"
         )
 
+# Making sure the bot is always active, while the code is running
 bot.polling(non_stop=True)
